@@ -1,0 +1,13 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "diverse-programmers-infra"
+resolve_s3 = true
+s3_prefix = "diverse-programmers-infra"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "PineconeIndex=\"diverse-programmers\" PineconeHost=\"https://diverse-programmers-08sw030.svc.aped-4627-b74a.pinecone.io\""
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"

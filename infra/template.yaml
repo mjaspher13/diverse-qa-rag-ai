@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Q&A API
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 1024
+    Environment:
+      Variables:
+        OPENAI_API_KEY: !Ref OpenAIKey
+        OPENAI_EMBED_MODEL: text-embedding-3-small
+        OPENAI_CHAT_MODEL: gpt-5-mini
+        PINECONE_API_KEY: !Ref PineconeKey
+        PINECONE_INDEX: !Ref PineconeIndex
+        PINECONE_HOST: !Ref PineconeHost
+
+Parameters:
+  OpenAIKey:
+    Type: String
+    NoEcho: true
+  PineconeKey:
+    Type: String
+    NoEcho: true
+  PineconeIndex:
+    Type: String
+    Default: diverse-programmers
+  PineconeHost:
+    Type: String
+
+Resources:
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Cors:
+        AllowMethods: "'OPTIONS,POST'"
+        AllowHeaders: "'content-type'"
+        AllowOrigin: "'*'"
+
+  IngestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../services/api
+      Handler: src/handlers/ingest.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        Ingest:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /ingest
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handlers/ingest.ts
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+
+  AskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../services/api
+      Handler: src/handlers/ask.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        Ask:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /ask
+            Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handlers/ask.ts
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+
+Outputs:
+  ApiBaseUrl:
+    Description: Base URL for the API (dev stage)
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/dev"
