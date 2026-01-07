@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Q&A API (Python/Flask)
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 1024
+    Environment:
+      Variables:
+        OPENAI_API_KEY: !Ref OpenAIKey
+        OPENAI_EMBED_MODEL: text-embedding-3-small
+        OPENAI_CHAT_MODEL: gpt-5-mini
+        PINECONE_API_KEY: !Ref PineconeKey
+        PINECONE_INDEX: !Ref PineconeIndex
+        PINECONE_HOST: !Ref PineconeHost
+
+Parameters:
+  OpenAIKey:
+    Type: String
+    NoEcho: true
+  PineconeKey:
+    Type: String
+    NoEcho: true
+  PineconeIndex:
+    Type: String
+    Default: diverse-programmers
+  PineconeHost:
+    Type: String
+
+Resources:
+  ApiPython:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Cors:
+        AllowMethods: "'OPTIONS,POST'"
+        AllowHeaders: "'content-type'"
+        AllowOrigin: "'*'"
+
+  IngestFunctionPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../services/api_py
+      Handler: handler.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        Ingest:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiPython
+            Path: /ingest
+            Method: post
+    Metadata:
+      BuildMethod: python3.11
+
+  AskFunctionPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../services/api_py
+      Handler: handler.handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        Ask:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiPython
+            Path: /ask
+            Method: post
+    Metadata:
+      BuildMethod: python3.11
+
+Outputs:
+  ApiBaseUrlPython:
+    Description: Base URL for the Python API (dev stage)
+    Value: !Sub "https://${ApiPython}.execute-api.${AWS::Region}.amazonaws.com/dev"
