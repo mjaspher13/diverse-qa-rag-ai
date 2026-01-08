@@ -38,14 +38,16 @@ This project implements a Retrieval-Augmented Generation (RAG) flow without usin
 
 ## Environment variables
 
-### API (SAM Parameters)
+### API
 
-These are provided via `infra/env.json` for `sam local`, and via `sam deploy --guided` for AWS.
+There are two API implementations in this repo:
 
-- `OpenAIKey` (required)
-- `PineconeKey` (required)
-- `PineconeHost` (required)
-- `PineconeIndex` (optional, default: `diverse-programmers`)
+- **Node.js (TypeScript)**: `infra/template.yaml`
+- **Python (Flask)**: `infra/template-python.yaml`
+
+For **local** runs with `sam local`, we pass Lambda environment variables via `--env-vars infra/env.json`.
+
+For **AWS deploy**, secrets are provided as **SAM/CloudFormation Parameters** (e.g. via `sam deploy --guided`).
 
 ### Web
 
@@ -66,19 +68,27 @@ Note: this SAM template uses **StageName = `dev`**, so the base URL must include
 
 Copy `infra/env.json.example` to `infra/env.json` and fill in real values.
 
-Important: the `Parameters` keys must match the SAM template parameter names (`OpenAIKey`, `PineconeKey`, etc.). If they don’t, SAM may use placeholder values and you may see errors like:
-
-```
-Incorrect API key provided: OpenAIKey
-```
+Important: `sam local --env-vars` expects a mapping of **Function logical IDs** to environment variables. This repo’s example file already includes both Node and Python function IDs.
 
 ### 2) Start the API (SAM)
 
 ```bash
 cd infra
-sam build
-sam local start-api --port 3000 --env-vars env.json
+
+# Run the Node.js API
+sam build -t template.yaml
+# Use the built template so the esbuild output (ask.js/ingest.js) is available
+sam local start-api -t .aws-sam/build/template.yaml --port 3000 --env-vars env.json
+
+# OR run the Python API
+sam build -t template-python.yaml
+# If you see a Python version error on Windows, build in Docker instead:
+# sam build -t template-python.yaml --use-container
+# The built template path is the same; each build overwrites .aws-sam/build/template.yaml
+sam local start-api -t .aws-sam/build/template.yaml --port 3002 --env-vars env.json
 ```
+
+Tip: if you want to run both at the same time, use different ports (e.g. Node on 3000, Python on 3002).
 
 ### 3) Configure and start the web app
 
