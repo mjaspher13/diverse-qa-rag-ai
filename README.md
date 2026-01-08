@@ -1,11 +1,17 @@
 # Q&A Portal
 
-Small Doc Q&A app:
+A minimal “Doc Q&A” portal that implements a straightforward Retrieval-Augmented Generation (RAG) flow:
 
 - **Ingest** short plain-text documents
-- **Ask** questions that are answered using only the ingested content
+- **Ask** questions that are answered using only retrieved chunks from the ingested content
+- **See sources** (document IDs/titles) alongside the answer
 
-Under the hood it uses **OpenAI embeddings + Pinecone** for retrieval, and **OpenAI chat** for the final answer (RAG).
+It uses **OpenAI embeddings + Pinecone** for retrieval, and **OpenAI chat** to generate the final answer.
+
+This repo includes two interchangeable API implementations (same endpoints):
+
+- **Node.js (TypeScript)** Lambda handlers
+- **Python (Flask)** Lambda handlers
 
 ## Repo structure
 
@@ -14,6 +20,14 @@ Under the hood it uses **OpenAI embeddings + Pinecone** for retrieval, and **Ope
 - `apps/web` – Next.js UI
   - `/docs` to ingest documents
   - `/ask` to ask questions and view sources
+
+## Tech stack
+
+- **Frontend**: Next.js (React)
+- **APIs**: Node.js (TypeScript) and Python (Flask) — same `/ingest` and `/ask` endpoints
+- **Infra**: AWS SAM (CloudFormation), AWS Lambda, API Gateway
+- **AI/RAG**: OpenAI (embeddings + chat), Pinecone (vector database)
+- **Local dev**: Docker + `sam local`
 
 ## Requirements
 
@@ -57,8 +71,11 @@ Create `apps/web/.env.local`:
 
 Examples:
 
-- Local: `http://127.0.0.1:3000`
+- Local (API, Node **or** Python): `http://127.0.0.1:3000`
+- Local (Python when running alongside Node): `http://127.0.0.1:3002`
 - Deployed: `https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/dev`
+
+You can point the web app at **either** API implementation by changing `NEXT_PUBLIC_API_BASE_URL` to match the port/base URL you're running.
 
 Note: this SAM template uses **StageName = `dev`**, so the base URL must include `/dev` when pointing at a deployed API.
 
@@ -86,7 +103,10 @@ sam local start-api -t .aws-sam-node/template.yaml --port 3000 --env-vars env.js
 sam build -t template-python.yaml --use-container --build-dir .aws-sam-py
 # If you *do* have Python 3.11 on your PATH, you can also build without Docker:
 # sam build -t template-python.yaml --build-dir .aws-sam-py
+# Run Python on 3000 if it's the only API you're running
 sam local start-api -t .aws-sam-py/template.yaml --port 3000 --env-vars env.json
+# If you want to run both Node and Python at the same time, use a different port, e.g.:
+# sam local start-api -t .aws-sam-py/template.yaml --port 3002 --env-vars env.json
 
 # Tip (especially on Windows + Docker): Python containers can have slower cold-starts.
 # If your first request times out, either increase your client timeout or warm containers:
@@ -101,6 +121,12 @@ Create `apps/web/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3000
+```
+
+If you're running the Python API on a different port (e.g. `3002`), set:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3002
 ```
 
 Then run:
@@ -154,6 +180,8 @@ You can paste these into `/docs` and click Ingest:
 
 ## API usage (curl)
 
+Note: if you're running the **Python** API locally, replace port `3000` with `3002` in the URLs below.
+
 ### Ingest (local)
 
 ```bash
@@ -193,14 +221,27 @@ npm test
 
 ## Deploy (AWS)
 
+Pick which API implementation you want to deploy:
+
 From `infra/`:
 
 ```bash
-sam build
-sam deploy --guided --region us-east-1
+# Deploy the Node.js API
+sam build -t template.yaml
+sam deploy --guided --region us-east-1 -t template.yaml
+
+# OR deploy the Python API
+# (On Windows, prefer Docker builds because the runtime is python3.11)
+sam build -t template-python.yaml --use-container
+sam deploy --guided --region us-east-1 -t template-python.yaml
 ```
 
-After deploy, SAM prints `ApiBaseUrl` (includes `/dev` stage). Set the web base URL:
+After deploy, SAM prints an API base URL (includes the `/dev` stage):
+
+- Node template: `ApiBaseUrl`
+- Python template: `ApiBaseUrlPython`
+
+Set the web base URL:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/dev
