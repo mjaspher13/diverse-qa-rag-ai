@@ -1,0 +1,96 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "pytest api_py",
+			"type": "shell",
+			"command": "cd /d c:\\Users\\Jaspher\\Downloads\\diverse-programmers\\services\\api_py && c:\\Users\\Jaspher\\Downloads\\diverse-programmers\\.venv\\Scripts\\python.exe -m pytest -q",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "pytest api_py (bash)",
+			"type": "shell",
+			"command": "cd \"/c/Users/Jaspher/Downloads/diverse-programmers/services/api_py\" && \"c:/Users/Jaspher/Downloads/diverse-programmers/.venv/Scripts/python.exe\" -m pytest -q",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "sam build python (py4)",
+			"type": "shell",
+			"command": "cd \"/c/Users/Jaspher/Downloads/diverse-programmers\" && sam build -t infra/template-python.yaml --use-container --build-dir infra/.aws-sam-py4",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "sam local python (3005)",
+			"type": "shell",
+			"command": "cd \"/c/Users/Jaspher/Downloads/diverse-programmers\" && sam local start-api -t infra/.aws-sam-py4/template.yaml --port 3005 --env-vars infra/env.json",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke python 3005 ask",
+			"type": "shell",
+			"command": "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3005/ask --data '{\"question\":\"\"}'",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke python 3005 ask (warm)",
+			"type": "shell",
+			"command": "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3005/ask --data '{\"question\":\"\"}'",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke python 3005 ingest",
+			"type": "shell",
+			"command": "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3005/ingest --data '{\"documents\":[]}'",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke node 3000 ask",
+			"type": "shell",
+			"command": "curl -s -i -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3000/ask --data '{\"question\":\"\"}' | head -n 20",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke node 3000 ask code",
+			"type": "shell",
+			"command": "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3000/ask --data '{\"question\":\"\"}'",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke node 3000 ask (safe quotes)",
+			"type": "shell",
+			"command": "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3000/ask --data \"{\\\"question\\\":\\\"\\\"}\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "sam local node (3000)",
+			"type": "shell",
+			"command": "cd \"/c/Users/Jaspher/Downloads/diverse-programmers\" && sam local start-api -t infra/.aws-sam-node/template.yaml --port 3000 --env-vars infra/env.json",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke node 3000 ask (body)",
+			"type": "shell",
+			"command": "curl -s -i -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3000/ask --data \"{\\\"question\\\":\\\"\\\"}\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "smoke node 3000 ingest (body)",
+			"type": "shell",
+			"command": "curl -s -i -H \"Content-Type: application/json\" -X POST http://127.0.0.1:3000/ingest --data \"{\\\"documents\\\":[]}\"",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

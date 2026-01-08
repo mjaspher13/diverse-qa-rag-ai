@@ -5,7 +5,8 @@
 **/dist/
 **/.next/
 **/out/
-**/.aws-sam/
+# SAM build outputs (Node/Python). Keep these out of git.
+/infra/.aws-sam*/
 **/.sam/
 
 # Logs
@@ -18,6 +19,9 @@
 **/.env
 **/.env.*
 !**/.env.example
+
+# AWS credentials/config (should never be committed)
+**/.aws/
 
 # SAM local env overrides
 /infra/env.json

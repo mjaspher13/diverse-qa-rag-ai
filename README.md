@@ -76,16 +76,21 @@ Important: `sam local --env-vars` expects a mapping of **Function logical IDs** 
 cd infra
 
 # Run the Node.js API
-sam build -t template.yaml
+sam build -t template.yaml --build-dir .aws-sam-node
 # Use the built template so the esbuild output (ask.js/ingest.js) is available
-sam local start-api -t .aws-sam/build/template.yaml --port 3000 --env-vars env.json
+sam local start-api -t .aws-sam-node/template.yaml --port 3000 --env-vars env.json
 
 # OR run the Python API
-sam build -t template-python.yaml
-# If you see a Python version error on Windows, build in Docker instead:
-# sam build -t template-python.yaml --use-container
-# The built template path is the same; each build overwrites .aws-sam/build/template.yaml
-sam local start-api -t .aws-sam/build/template.yaml --port 3002 --env-vars env.json
+# Note: the Python template targets the Lambda runtime `python3.11`.
+# If you don't have Python 3.11 installed locally (common on Windows), build in Docker:
+sam build -t template-python.yaml --use-container --build-dir .aws-sam-py
+# If you *do* have Python 3.11 on your PATH, you can also build without Docker:
+# sam build -t template-python.yaml --build-dir .aws-sam-py
+sam local start-api -t .aws-sam-py/template.yaml --port 3002 --env-vars env.json
+
+# Tip (especially on Windows + Docker): Python containers can have slower cold-starts.
+# If your first request times out, either increase your client timeout or warm containers:
+# sam local start-api ... --warm-containers EAGER
 ```
 
 Tip: if you want to run both at the same time, use different ports (e.g. Node on 3000, Python on 3002).

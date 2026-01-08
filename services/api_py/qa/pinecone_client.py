@@ -1,25 +1,29 @@
 from __future__ import annotations
 
-from pinecone import Pinecone
+from functools import lru_cache
 
 from qa.env import must_env
 
-_pc = Pinecone(api_key=must_env("PINECONE_API_KEY"))
 
-_PINECONE_INDEX = must_env("PINECONE_INDEX")
-_PINECONE_HOST = must_env("PINECONE_HOST")
+@lru_cache(maxsize=1)
+def _get_index():
+    # Importing Pinecone can be relatively heavy; avoid doing it during Lambda init.
+    from pinecone import Pinecone
 
-_index = _pc.Index(host=_PINECONE_HOST)
+    pc = Pinecone(api_key=must_env("PINECONE_API_KEY"))
+    must_env("PINECONE_INDEX")
+    host = must_env("PINECONE_HOST")
+    return pc.Index(host=host)
 
 
 def upsert_vectors(vectors: list[dict]) -> None:
     if not vectors:
         return
-    _index.upsert(vectors=vectors)
+    _get_index().upsert(vectors=vectors)
 
 
 def query_vectors(vector: list[float], top_k: int) -> list[dict]:
-    res = _index.query(vector=vector, top_k=top_k, include_metadata=True)
+    res = _get_index().query(vector=vector, top_k=top_k, include_metadata=True)
     matches = getattr(res, "matches", None)
     if matches is None:
         return []
