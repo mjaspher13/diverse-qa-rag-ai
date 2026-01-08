@@ -86,7 +86,7 @@ sam local start-api -t .aws-sam-node/template.yaml --port 3000 --env-vars env.js
 sam build -t template-python.yaml --use-container --build-dir .aws-sam-py
 # If you *do* have Python 3.11 on your PATH, you can also build without Docker:
 # sam build -t template-python.yaml --build-dir .aws-sam-py
-sam local start-api -t .aws-sam-py/template.yaml --port 3002 --env-vars env.json
+sam local start-api -t .aws-sam-py/template.yaml --port 3000 --env-vars env.json
 
 # Tip (especially on Windows + Docker): Python containers can have slower cold-starts.
 # If your first request times out, either increase your client timeout or warm containers:
